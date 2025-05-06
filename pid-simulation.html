@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.5">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="fr"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;Simulation PID – Réservoir d'eau&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script src="https://cdn.jsdelivr.net/npm/chart.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>label { display: inline-block; width: 30px; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>input { width: 60px; margin: 0 10px; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>canvas { background: white; border: 1px solid #ccc; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;h2&gt;Simulation PID – Réservoir d'eau&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;p&gt;Consigne actuelle : &lt;span id="setpoint"&gt;0&lt;/span&gt; L&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;Kp&lt;/label&gt;&lt;input type="number" id="kp" value="1" step="0.1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;Ki&lt;/label&gt;&lt;input type="number" id="ki" value="0.1" step="0.01"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;Kd&lt;/label&gt;&lt;input type="number" id="kd" value="0.05" step="0.01"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button onclick="reset()"&gt;Réinitialiser&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;canvas id="chart" width="800" height="400"&gt;&lt;/canvas&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const ctx = document.getElementById('chart').getContext('2d');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const chart = new Chart(ctx, {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>type: 'line',</p>
+<p class="p1"><span class="Apple-converted-space">      </span>data: {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>labels: [],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>datasets: [{</p>
+<p class="p1"><span class="Apple-converted-space">          </span>label: 'Niveau du réservoir (L)',</p>
+<p class="p1"><span class="Apple-converted-space">          </span>data: [],</p>
+<p class="p1"><span class="Apple-converted-space">          </span>borderColor: 'blue',</p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill: false</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}, {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>label: 'Consigne (L)',</p>
+<p class="p1"><span class="Apple-converted-space">          </span>data: [],</p>
+<p class="p1"><span class="Apple-converted-space">          </span>borderColor: 'red',</p>
+<p class="p1"><span class="Apple-converted-space">          </span>borderDash: [5, 5],</p>
+<p class="p1"><span class="Apple-converted-space">          </span>fill: false</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}]</p>
+<p class="p1"><span class="Apple-converted-space">      </span>},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>options: {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>scales: {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>x: { title: { display: true, text: 'Temps (s)' } },</p>
+<p class="p1"><span class="Apple-converted-space">          </span>y: { title: { display: true, text: 'Niveau (L)' }, min: 0, max: 100 }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let level = 0, integral = 0, previousError = 0, time = 0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let setpoint = Math.floor(Math.random() * 80) + 10;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('setpoint').textContent = setpoint;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function reset() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>level = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>integral = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>previousError = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>time = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chart.data.labels = [];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chart.data.datasets[0].data = [];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chart.data.datasets[1].data = [];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chart.update();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>setInterval(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const Kp = parseFloat(document.getElementById('kp').value);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const Ki = parseFloat(document.getElementById('ki').value);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const Kd = parseFloat(document.getElementById('kd').value);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const error = setpoint - level;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>integral += error;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const derivative = error - previousError;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const output = Kp * error + Ki * integral + Kd * derivative;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>level += output * 0.1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (level &lt; 0) level = 0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (level &gt; 100) level = 100;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>previousError = error;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>time += 1;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>chart.data.labels.push(time);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chart.data.datasets[0].data.push(level);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chart.data.datasets[1].data.push(setpoint);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>chart.update();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (chart.data.labels.length &gt; 100) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>chart.data.labels.shift();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>chart.data.datasets[0].data.shift();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>chart.data.datasets[1].data.shift();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}, 100);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>setInterval(() =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setpoint = Math.floor(Math.random() * 80) + 10;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById('setpoint').textContent = setpoint;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}, 10000);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
